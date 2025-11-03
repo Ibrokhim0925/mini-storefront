@@ -1,7 +1,7 @@
 'use client';
 
 export default function StatusMessage({ status }) {
-  
+
   const styles = "text-center text-lg font-medium p-8 rounded-lg mb-6";
 
   switch (status) {

@@ -1,5 +1,6 @@
 'use client';
 
+// Imports
 import { useState, useEffect, useMemo } from 'react';
 import ProductList from './ProductList';
 import CategoryFilter from './CategoryFilter';
@@ -8,22 +9,17 @@ import CartSummary from './CartSummary';
 import StatusMessage from './StatusMessage';
 
 export default function Catalog() {
-  // State for master product list
+  
+  // State
   const [products, setProducts] = useState([]);
-  
-  // State for shopping cart
   const [cart, setCart] = useState([]);
-  
-  // State for filters
   const [filters, setFilters] = useState({
     category: 'all',
-    maxPrice: 1500, // Default max
+    maxPrice: 1500,
   });
-
-  // State for data fetching status
   const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error', 'empty'
 
-  // EFFECT 1: Fetch initial product data
+  // Effect 1: Fetch initial product data
   useEffect(() => {
     async function fetchProducts() {
       setStatus('loading');
@@ -48,39 +44,10 @@ export default function Catalog() {
     fetchProducts();
   }, []); // Empty array: runs once on mount
 
-  // EFFECT 2: Simulate real-time stock updates
-  useEffect(() => {
-    // Don't start the interval until products are loaded
-    if (products.length === 0) return;
-    
-    const intervalId = setInterval(() => {
-      // Pick a random product to update
-      const productIndex = Math.floor(Math.random() * products.length);
-      
-      setProducts(prevProducts => {
-        return prevProducts.map((product, index) => {
-          // Decrement stock by 1, but not below 0
-          if (index === productIndex && product.stock > 0) {
-            return { ...product, stock: product.stock - 1 };
-          }
-          return product;
-        });
-      });
-    }, 3000); // Runs every 3 seconds
-    
-    // CRITICAL: Cleanup function
-    // This runs when the component unmounts to prevent memory leaks
-    return () => {
-      clearInterval(intervalId);
-    };
-
-  }, [products]); // The dependency array [products] is important
-
-  // EFFECT 2: Simulate real-time stock updates
+  // Effect 2: Simulate real-time stock updates
   useEffect(() => {
     if (products.length === 0) return; // Don't run if no products
 
-    // Set up an interval
     const intervalId = setInterval(() => {
       setProducts(prevProducts => {
         const productIndex = Math.floor(Math.random() * prevProducts.length);
@@ -100,18 +67,18 @@ export default function Catalog() {
     };
   }, [products]); // Re-run if products array changes
 
-  // DERIVED STATE: Calculate categories
+  // Derived State: Calculate categories
   const categories = useMemo(() => {
     const uniqueCategories = new Set(products.map(p => p.category));
     return ['all', ...Array.from(uniqueCategories)];
   }, [products]);
 
-  // DERIVED STATE: Calculate max price for slider
+  // Derived State: Calculate max price for slider
   const maxPriceLimit = useMemo(() => {
     return Math.max(...products.map(p => p.price), 0);
   }, [products]);
 
-  // DERIVED STATE: Apply filters
+  // Derived State: Apply filters
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const categoryMatch = filters.category === 'all' || product.category === filters.category;
@@ -120,7 +87,7 @@ export default function Catalog() {
     });
   }, [products, filters]);
 
-  // Effect to update status if filters are empty
+  // Effect 3: Update status if filters are empty (MUST be after filteredProducts)
   useEffect(() => {
     if (status === 'success' && filteredProducts.length === 0) {
       setStatus('empty');
@@ -130,17 +97,15 @@ export default function Catalog() {
   }, [filteredProducts, status]);
 
 
-  // HANDLER: Change category
+  // Handlers
   const handleCategoryChange = (category) => {
     setFilters(prevFilters => ({ ...prevFilters, category }));
   };
 
-  // HANDLER: Change price
   const handlePriceChange = (price) => {
     setFilters(prevFilters => ({ ...prevFilters, maxPrice: price }));
   };
 
-  // HANDLER: Add to cart
   const handleAddToCart = (productToAdd) => {
     const productInStock = products.find(p => p.id === productToAdd.id);
     if (!productInStock) return;
@@ -150,7 +115,7 @@ export default function Catalog() {
       
       const currentCartQty = itemInCart ? itemInCart.quantity : 0;
       if (currentCartQty >= productInStock.stock) {
-        return prevCart; // Stock limit reached
+        return prevCart;
       }
 
       if (itemInCart) {
@@ -164,7 +129,6 @@ export default function Catalog() {
     });
   };
 
-  // HANDLER: Decrement from cart
   const handleDecrementItem = (productId) => {
     setCart(prevCart => {
       const itemInCart = prevCart.find(item => item.id === productId);
@@ -181,12 +145,11 @@ export default function Catalog() {
     });
   };
 
-  // HANDLER: Reset cart
   const handleResetCart = () => {
     setCart([]);
   };
 
-  // RENDER
+  // Render
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
       {/* Column 1: Filters & Cart */}
@@ -210,7 +173,11 @@ export default function Catalog() {
 
       {/* Column 2: Products */}
       <section className="lg:col-span-3">
+        
+        {/* Correct placement of StatusMessage */}
         <StatusMessage status={status} />
+        
+        {/* Conditional rendering of the product list */}
         {status === 'success' || status === 'empty' ? (
           <ProductList
             products={filteredProducts}
