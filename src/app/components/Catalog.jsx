@@ -50,6 +50,34 @@ export default function Catalog() {
 
   // EFFECT 2: Simulate real-time stock updates
   useEffect(() => {
+    // Don't start the interval until products are loaded
+    if (products.length === 0) return;
+    
+    const intervalId = setInterval(() => {
+      // Pick a random product to update
+      const productIndex = Math.floor(Math.random() * products.length);
+      
+      setProducts(prevProducts => {
+        return prevProducts.map((product, index) => {
+          // Decrement stock by 1, but not below 0
+          if (index === productIndex && product.stock > 0) {
+            return { ...product, stock: product.stock - 1 };
+          }
+          return product;
+        });
+      });
+    }, 3000); // Runs every 3 seconds
+    
+    // CRITICAL: Cleanup function
+    // This runs when the component unmounts to prevent memory leaks
+    return () => {
+      clearInterval(intervalId);
+    };
+
+  }, [products]); // The dependency array [products] is important
+
+  // EFFECT 2: Simulate real-time stock updates
+  useEffect(() => {
     if (products.length === 0) return; // Don't run if no products
 
     // Set up an interval
